@@ -1,0 +1,164 @@
+.asp-tool-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 7px;
+  overflow-y: auto;
+  background: var(--asp-surface);
+  border: 1px solid var(--asp-line);
+  border-radius: var(--asp-radius-lg);
+}
+
+.asp-tool-rail .asp-rail__slot {
+  position: relative;
+}
+
+.asp-tool-rail .asp-rail__tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  padding: 10px 4px;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 10.5px;
+  font-weight: 600;
+  border-radius: var(--asp-radius-md);
+  background: transparent;
+  color: var(--asp-ink-muted);
+  transition: background 0.14s, color 0.14s;
+}
+.asp-tool-rail .asp-rail__tool:hover {
+  background: var(--asp-surface-sunk);
+  color: var(--asp-ink-700);
+}
+.asp-tool-rail .asp-rail__tool:focus-visible,
+.asp-tool-rail .asp-rail__flyout-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--asp-ring);
+}
+.asp-tool-rail .asp-rail__tool--active,
+.asp-tool-rail .asp-rail__tool--active:hover {
+  background: var(--asp-accent-soft);
+  color: var(--asp-accent-soft-ink);
+  font-weight: 700;
+}
+.asp-tool-rail .asp-rail__label {
+  line-height: 1;
+  text-align: center;
+}
+
+/* Flyout affordance — a Photoshop-style filled triangle tucked into the slot's
+   bottom-right corner. Universally read as "this slot holds more tools". */
+.asp-tool-rail .asp-rail__flyout-toggle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 0 0 var(--asp-radius-md) 0;
+}
+.asp-tool-rail .asp-rail__flyout-toggle::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  width: 7px;
+  height: 7px;
+  background: var(--asp-ink-muted);
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  transition: background 0.14s, transform 0.14s;
+}
+.asp-tool-rail .asp-rail__flyout-toggle:hover::after,
+.asp-tool-rail .asp-rail__flyout-toggle--open::after {
+  background: var(--asp-accent);
+}
+.asp-tool-rail .asp-rail__flyout-toggle--open::after {
+  transform: scale(1.25);
+}
+/* On the active (accent-soft) slot, keep the triangle legible. */
+.asp-tool-rail .asp-rail__tool--active ~ .asp-rail__flyout-toggle::after {
+  background: var(--asp-accent);
+}
+
+.asp-tool-rail .asp-rail__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 28;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: default;
+}
+.asp-tool-rail .asp-rail__flyout {
+  position: fixed;
+  z-index: 29;
+  min-width: 150px;
+  background: var(--asp-surface);
+  border: 1px solid var(--asp-line);
+  border-radius: var(--asp-radius-md);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.2);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.asp-tool-rail .asp-rail__flyout-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--asp-ink-700);
+  border-radius: var(--asp-radius-sm);
+  text-align: left;
+}
+.asp-tool-rail .asp-rail__flyout-item:hover {
+  background: var(--asp-surface-sunk);
+}
+.asp-tool-rail .asp-rail__flyout-item--active {
+  background: var(--asp-accent-soft);
+  color: var(--asp-accent-soft-ink);
+}
+.asp-tool-rail .asp-rail__flyout-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--asp-ring);
+}
+
+/* Narrow editor: the rail becomes a horizontal tool grid that wraps onto two
+   rows, so every tool stays visible (no horizontal scrolling to discover them). */
+.asp-tool-rail @container aspeditor (max-width: 600px) {
+  .asp-tool-rail {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 8px;
+    overflow: visible;
+  }
+  .asp-tool-rail .asp-rail__slot {
+    flex: 1 1 auto;
+    min-width: 56px;
+    max-width: 96px;
+  }
+  .asp-tool-rail .asp-rail__tool {
+    padding: 7px 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .asp-tool-rail .asp-rail__tool {
+    transition: none;
+  }
+}

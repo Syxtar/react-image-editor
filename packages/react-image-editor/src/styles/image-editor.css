@@ -1,0 +1,691 @@
+.asp-image-editor {
+  display: block;
+  /* Establish a query container so the editor's own width — not the viewport —
+     drives the responsive layout (correct even when embedded in a sidebar). */
+  container-type: inline-size;
+  container-name: aspeditor;
+  /* Positioning context for the error toast overlay. */
+  position: relative;
+  background: var(--asp-bg);
+  color: var(--asp-ink);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --asp-stage-checker-a: var(--asp-surface-sunk);
+  --asp-stage-checker-b: var(--asp-surface-2);
+}
+
+.asp-image-editor .asp-card {
+  background: var(--asp-surface);
+  border: 1px solid var(--asp-line);
+  border-radius: var(--asp-radius-lg);
+}
+
+/* ---- error toast ---- */
+.asp-image-editor .asp-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: min(440px, calc(100% - 28px));
+  padding: 10px 12px 10px 14px;
+  border-radius: var(--asp-radius-md);
+  background: var(--asp-error, #c0392b);
+  color: #fff;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28);
+  font-size: 13px;
+  line-height: 1.35;
+}
+.asp-image-editor .asp-toast__msg {
+  flex: 1;
+}
+.asp-image-editor .asp-toast__close {
+  flex: none;
+  display: inline-flex;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: var(--asp-radius-sm);
+  opacity: 0.85;
+}
+.asp-image-editor .asp-toast__close:hover {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .asp-image-editor .asp-toast {
+    animation: asp-toast-in 160ms ease-out;
+  }
+}
+@keyframes asp-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+
+.asp-image-editor .asp-workspace {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr) 268px;
+  /* Bound the row to the container height so a tall options panel (e.g. Text)
+     scrolls inside its column instead of stretching the row — which would grow
+     the stage and trigger a canvas resize/flicker on tool switches. */
+  grid-template-rows: minmax(0, 1fr);
+  gap: 14px;
+  height: 100%;
+  min-height: 540px;
+}
+
+.asp-image-editor .asp-workspace__rail {
+  min-height: 0;
+}
+
+.asp-image-editor .asp-workspace__canvas {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.asp-image-editor .asp-workspace__panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.asp-image-editor .asp-workspace__options {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---- top bar ---- */
+.asp-image-editor .asp-topbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--asp-line);
+  flex-wrap: wrap;
+}
+
+.asp-image-editor .asp-iconbtn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--asp-line-strong);
+  background: var(--asp-surface);
+  cursor: pointer;
+  border-radius: var(--asp-radius-sm);
+  color: var(--asp-ink-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.asp-image-editor .asp-iconbtn:hover:not(:disabled) {
+  background: var(--asp-surface-sunk);
+}
+.asp-image-editor .asp-iconbtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.asp-image-editor .asp-iconbtn--on {
+  background: var(--asp-accent-soft);
+  border-color: var(--asp-accent);
+  color: var(--asp-accent);
+}
+.asp-image-editor .asp-iconbtn--on:hover:not(:disabled) {
+  background: var(--asp-accent-soft);
+}
+
+.asp-image-editor .asp-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--asp-line);
+  margin: 0 2px;
+}
+
+.asp-image-editor .asp-zoom {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  background: var(--asp-surface-sunk);
+  border-radius: var(--asp-radius-md);
+  padding: 2px;
+}
+.asp-image-editor .asp-zoom__btn {
+  width: 28px;
+  height: 26px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--asp-radius-sm);
+  color: var(--asp-ink-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.asp-image-editor .asp-zoom__btn:hover {
+  background: var(--asp-surface);
+}
+.asp-image-editor .asp-zoom__label {
+  min-width: 46px;
+  text-align: center;
+  font-family: var(--asp-font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--asp-ink);
+}
+
+.asp-image-editor .asp-spacer {
+  flex: 1;
+}
+
+.asp-image-editor .asp-btn-line {
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--asp-line-strong);
+  background: var(--asp-surface);
+  cursor: pointer;
+  border-radius: var(--asp-radius-sm);
+  color: var(--asp-ink-700);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.asp-image-editor .asp-btn-line:hover {
+  background: var(--asp-surface-sunk);
+}
+
+.asp-image-editor .asp-btn-accent {
+  height: 34px;
+  padding: 0 14px;
+  border: 0;
+  background: var(--asp-accent);
+  color: var(--asp-accent-ink);
+  cursor: pointer;
+  border-radius: var(--asp-radius-sm);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.asp-image-editor .asp-btn-accent:hover {
+  background: var(--asp-accent-hover);
+}
+
+.asp-image-editor .asp-iconbtn:focus-visible,
+.asp-image-editor .asp-zoom__btn:focus-visible,
+.asp-image-editor .asp-btn-line:focus-visible,
+.asp-image-editor .asp-btn-accent:focus-visible,
+.asp-image-editor .asp-fmt:focus-visible,
+.asp-image-editor .asp-sample:focus-visible,
+.asp-image-editor .asp-upload:focus-within {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--asp-ring);
+}
+
+/* ---- popovers ---- */
+.asp-image-editor .asp-pop {
+  position: relative;
+}
+.asp-image-editor .asp-pop__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 18;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: default;
+}
+.asp-image-editor .asp-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  z-index: 19;
+  width: 230px;
+  background: var(--asp-surface);
+  border: 1px solid var(--asp-line);
+  border-radius: var(--asp-radius-md);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.2);
+  padding: 12px;
+}
+.asp-image-editor .asp-menu--right {
+  right: 0;
+}
+.asp-image-editor .asp-menu--export {
+  width: 248px;
+  padding: 14px;
+}
+.asp-image-editor .asp-menu--history {
+  left: 0;
+  width: 240px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.asp-image-editor .asp-menu--history .asp-history-list {
+  border-top: none;
+  max-height: none;
+}
+.asp-image-editor .asp-menu__title {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--asp-ink-muted);
+  margin-bottom: 9px;
+}
+.asp-image-editor .asp-menu__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--asp-ink);
+}
+.asp-image-editor .asp-menu__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 14px 0 7px;
+}
+.asp-image-editor .asp-menu__value {
+  font-family: var(--asp-font-mono);
+  font-size: 12px;
+  color: var(--asp-ink-700);
+}
+
+.asp-image-editor .asp-sample-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 11px;
+}
+.asp-image-editor .asp-sample {
+  width: 100%;
+  aspect-ratio: 1.5 / 1;
+  border-radius: var(--asp-radius-sm);
+  border: 2px solid transparent;
+  cursor: pointer;
+  background-size: cover;
+  background-position: center;
+}
+.asp-image-editor .asp-sample:hover {
+  border-color: var(--asp-accent);
+}
+
+.asp-image-editor .asp-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 34px;
+  border: 1px dashed var(--asp-line-strong);
+  border-radius: var(--asp-radius-sm);
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--asp-ink-700);
+  position: relative;
+}
+.asp-image-editor .asp-upload:hover {
+  border-color: var(--asp-accent);
+  color: var(--asp-accent);
+}
+.asp-image-editor .asp-upload input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.asp-image-editor .asp-menu__divider {
+  height: 1px;
+  background: var(--asp-line);
+  margin: 12px 0;
+}
+.asp-image-editor .asp-mt-sm {
+  margin-top: 8px;
+}
+.asp-image-editor .asp-upload--btn {
+  width: 100%;
+  margin-bottom: 8px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.asp-image-editor .asp-fmt-row {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+.asp-image-editor .asp-fmt {
+  flex: 1;
+  padding: 7px 0;
+  border-radius: var(--asp-radius-sm);
+  border: 1px solid var(--asp-line-strong);
+  background: var(--asp-surface);
+  color: var(--asp-ink-700);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.asp-image-editor .asp-fmt--active {
+  border-color: var(--asp-accent);
+  background: var(--asp-accent-soft);
+  color: var(--asp-accent-soft-ink);
+}
+.asp-image-editor .asp-range {
+  width: 100%;
+  accent-color: var(--asp-accent);
+}
+.asp-image-editor .asp-download {
+  width: 100%;
+  justify-content: center;
+  margin-top: 13px;
+  height: var(--asp-ctl-h);
+}
+
+/* ---- stage / canvas ---- */
+/* Wrapper that frames the stage with measurement rulers when enabled. With
+   rulers off it is a transparent flex passthrough; on, it becomes a grid with
+   an 18px ruler track on the top and left plus a clickable corner. */
+.asp-image-editor .asp-stagewrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.asp-image-editor .asp-stagewrap--rulers {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  grid-template-rows: 18px 1fr;
+}
+.asp-image-editor .asp-stagewrap--rulers .asp-stage {
+  grid-column: 2;
+  grid-row: 2;
+}
+.asp-image-editor .asp-ruler {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--asp-surface-sunk);
+  touch-action: none;
+}
+.asp-image-editor .asp-ruler--h {
+  grid-column: 2;
+  grid-row: 1;
+  border-bottom: 1px solid var(--asp-line);
+  cursor: row-resize;
+}
+.asp-image-editor .asp-ruler--v {
+  grid-column: 1;
+  grid-row: 2;
+  border-right: 1px solid var(--asp-line);
+  cursor: col-resize;
+}
+.asp-image-editor .asp-ruler-corner {
+  grid-column: 1;
+  grid-row: 1;
+  border: 0;
+  border-right: 1px solid var(--asp-line);
+  border-bottom: 1px solid var(--asp-line);
+  background: var(--asp-surface-sunk);
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+}
+.asp-image-editor .asp-ruler-corner::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-right: 1.5px solid var(--asp-ink-faint);
+  border-bottom: 1.5px solid var(--asp-ink-faint);
+  border-radius: 0 0 3px 0;
+}
+.asp-image-editor .asp-ruler-corner:hover::after {
+  border-color: var(--asp-accent);
+}
+
+.asp-image-editor .asp-stage {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: repeating-conic-gradient(
+      var(--asp-stage-checker-a) 0% 25%,
+      var(--asp-stage-checker-b) 0% 50%
+    )
+    50% / 22px 22px;
+}
+.asp-image-editor .asp-stage canvas {
+  display: block;
+}
+
+.asp-image-editor .asp-guides-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.asp-image-editor .asp-crop-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.asp-image-editor .asp-crop-overlay__v {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.5);
+}
+.asp-image-editor .asp-crop-overlay__h {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.asp-image-editor .asp-placeholder {
+  padding: 40px;
+  text-align: center;
+  color: var(--asp-ink-muted);
+}
+
+/* ---- viewer layout ---- */
+.asp-image-editor .asp-viewer {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+  min-height: 360px;
+}
+
+/* ---- basic modal layout ---- */
+.asp-image-editor .asp-basic {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.asp-image-editor .asp-basic__head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--asp-line);
+}
+.asp-image-editor .asp-basic__title {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--asp-ink);
+}
+.asp-image-editor .asp-iconbtn-plain {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  cursor: pointer;
+  border-radius: var(--asp-radius-sm);
+  background: transparent;
+  color: var(--asp-ink-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.asp-image-editor .asp-iconbtn-plain:hover {
+  background: var(--asp-surface-sunk);
+}
+.asp-image-editor .asp-iconbtn-plain:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--asp-ring);
+}
+.asp-image-editor .asp-basic__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.asp-image-editor .asp-stage--rounded {
+  border-radius: var(--asp-radius-md);
+  min-height: 260px;
+  flex: none;
+  height: 280px;
+}
+.asp-image-editor .asp-basic__hint {
+  margin: 2px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--asp-ink-muted);
+}
+.asp-image-editor .asp-basic__controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.asp-image-editor .asp-zoomslider {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 140px;
+  color: var(--asp-ink-muted);
+}
+.asp-image-editor .asp-basic__foot {
+  flex: none;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--asp-line);
+}
+
+/* shared chip + section-label + inline upload (also used by the basic layout) */
+.asp-image-editor .asp-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--asp-ink-muted);
+  margin-bottom: 8px;
+}
+.asp-image-editor .asp-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.asp-image-editor .asp-chip {
+  padding: 7px 12px;
+  border-radius: var(--asp-radius-sm);
+  border: 1px solid var(--asp-line-strong);
+  background: var(--asp-surface);
+  color: var(--asp-ink-700);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.asp-image-editor .asp-chip:hover {
+  background: var(--asp-surface-sunk);
+}
+.asp-image-editor .asp-chip--active,
+.asp-image-editor .asp-chip--active:hover {
+  border-color: var(--asp-accent);
+  background: var(--asp-accent-soft);
+  color: var(--asp-accent-soft-ink);
+}
+.asp-image-editor .asp-chip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--asp-ring);
+}
+.asp-image-editor .asp-upload--inline {
+  flex: none;
+  width: auto;
+  padding: 0 13px;
+  height: 38px;
+}
+
+/* ---- responsive (driven by the editor's own width) ---- */
+/* Tablet-ish: tighten the rail and options column so the canvas keeps room. */
+.asp-image-editor @container aspeditor (max-width: 880px) {
+  .asp-image-editor .asp-workspace {
+    grid-template-columns: 68px minmax(0, 1fr) 232px;
+    gap: 10px;
+  }
+}
+
+/* Narrow / mobile: stack the rail, canvas, and panel into one scrolling column.
+   The host scrolls; children keep their natural height (the canvas a comfortable
+   fixed height) so nothing gets squished. The rail is a sticky tool strip. */
+.asp-image-editor @container aspeditor (max-width: 600px) {
+  .asp-image-editor {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .asp-image-editor .asp-workspace {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 100%;
+    gap: 10px;
+  }
+  .asp-image-editor .asp-workspace__rail {
+    position: sticky;
+    top: 0;
+    z-index: 6;
+  }
+  .asp-image-editor .asp-workspace__canvas {
+    flex: none;
+    height: clamp(300px, 52cqh, 460px);
+  }
+  .asp-image-editor .asp-workspace__panel {
+    flex: none;
+    overflow: visible;
+  }
+  /* The options panel must take its natural height here (not flex:1, whose 0%
+     basis collapses it in a content-height column and clips the sliders). */
+.asp-image-editor .asp-workspace__options {
+    flex: none;
+  }
+}
