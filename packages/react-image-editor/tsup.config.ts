@@ -41,5 +41,6 @@ export default defineConfig({
     mkdirSync(join(import.meta.dirname, 'dist'), { recursive: true });
     writeFileSync(join(import.meta.dirname, 'dist/styles.css'), css);
     copyFileSync(join(import.meta.dirname, '../../LICENSE'), join(import.meta.dirname, 'LICENSE'));
+    copyFileSync(join(import.meta.dirname, '../../README.md'), join(import.meta.dirname, 'README.md'));
   },
 });
