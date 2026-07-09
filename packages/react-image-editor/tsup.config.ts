@@ -17,6 +17,14 @@ export default defineConfig({
   banner: { js: '"use client";' },
   external: ['react', 'react-dom', 'react/jsx-runtime', 'fabric', 'jsondiffpatch', 'jspdf'],
   onSuccess: async () => {
+    // Re-attach the "use client" directive: tsup's rollup treeshake pass strips
+    // module-level directives, so the banner option alone does not survive.
+    const entry = join(import.meta.dirname, 'dist/index.js');
+    const js = readFileSync(entry, 'utf8');
+    if (!js.startsWith('"use client";')) {
+      writeFileSync(entry, `"use client";\n${js}`);
+    }
+
     // Assemble dist/styles.css from src/styles/*.css in a stable order.
     const stylesDir = join(import.meta.dirname, 'src/styles');
     const order = readFileSync(join(stylesDir, 'order.txt'), 'utf8')
