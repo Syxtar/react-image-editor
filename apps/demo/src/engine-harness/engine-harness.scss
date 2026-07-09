@@ -1,0 +1,47 @@
+/* Engine-harness styles — ported from the Angular demo's inline component
+   styles. Nested under .harness so nothing leaks into the rest of the site
+   (Angular scoped these via emulated view encapsulation). */
+.harness {
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  padding: 14px;
+  background: #f8fafc;
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+
+    button {
+      height: 32px;
+      padding: 0 12px;
+      border: 1px solid #98a2b3;
+      background: #fff;
+      border-radius: 7px;
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  .stage {
+    display: flex;
+    justify-content: center;
+    background: repeating-conic-gradient(#e2e8f0 0% 25%, #f1f5f9 0% 50%) 50% / 22px 22px;
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .status {
+    font-size: 12px;
+    color: #475467;
+    margin: 10px 0 0;
+    font-family: ui-monospace, monospace;
+  }
+}

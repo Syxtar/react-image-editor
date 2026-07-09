@@ -1,0 +1,26 @@
+.seg {
+  display: inline-flex;
+  gap: 4px;
+  margin-bottom: 0.9rem;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+.seg button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  padding: 0.3rem 0.85rem;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.seg button.seg--on {
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: var(--shadow-xs);
+}
