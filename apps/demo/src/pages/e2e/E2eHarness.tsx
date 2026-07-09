@@ -50,7 +50,19 @@ export default function E2eHarness(): ReactElement {
   };
 
   return (
-    <div data-testid="e2e-harness" style={{ padding: 16 }}>
+    // Full-bleed overlay: escapes the docs shell's max-width/sidebar so the
+    // editor gets a realistic desktop width (no wrapped topbar) for the tests.
+    <div
+      data-testid="e2e-harness"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 50,
+        overflow: 'auto',
+        padding: 16,
+        background: themeMode === 'dark' ? '#0e1116' : '#f6f7f9',
+      }}
+    >
       <div style={{ height: 640 }}>
         <ImageEditor
           mode={mode}

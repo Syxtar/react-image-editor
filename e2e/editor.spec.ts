@@ -63,8 +63,12 @@ test.describe('workspace (advanced mode)', () => {
     await page.locator('.asp-rail__tool', { hasText: 'Crop & rotate' }).click();
     await expect(page.locator('.asp-crop-overlay')).toBeVisible();
     await page.getByRole('button', { name: 'Apply crop' }).click();
+    // Applying returns to Select (overlay gone). The region is an output
+    // setting, not a history entry — parity with the Angular editor — so it
+    // surfaces as the crop panel's Reset control on re-entry.
     await expect(page.locator('.asp-crop-overlay')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Undo' })).toBeEnabled();
+    await page.locator('.asp-rail__tool', { hasText: 'Crop & rotate' }).click();
+    await expect(page.getByRole('button', { name: 'Reset crop' })).toBeVisible();
   });
 
   test('adjustments and looks are offered by the Color tool', async ({ page }) => {

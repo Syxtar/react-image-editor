@@ -352,7 +352,9 @@ export class EditorController {
           heicDecoderLoader: this.props.heicDecoderLoader,
         });
         this.engine.setSelectionListener((info) => this.onSelectionChange(info));
-        this.engine.setLayersListener(() => this.refreshLayers());
+        // Full sync (not just layers): the engine notifies here after commits
+        // like a finished freehand stroke, and undo/redo/history must follow.
+        this.engine.setLayersListener(() => this.sync());
         this.engine.setViewportListener(() =>
           this.patch({ rulerVersion: this.state.rulerVersion + 1 }),
         );

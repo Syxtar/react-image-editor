@@ -457,6 +457,9 @@ export function AspOptionsPanel({
                       onPointerUp={(event) =>
                         onAdjustCommit?.({ key: def.key, value: Number(event.currentTarget.value) })
                       }
+                      onKeyUp={(event) =>
+                        onAdjustCommit?.({ key: def.key, value: Number(event.currentTarget.value) })
+                      }
                       onBlur={(event) =>
                         onAdjustCommit?.({ key: def.key, value: Number(event.currentTarget.value) })
                       }
@@ -571,6 +574,7 @@ export function AspOptionsPanel({
                 value={straighten}
                 onChange={(event) => onStraightenInput?.(Number(event.currentTarget.value))}
                 onPointerUp={(event) => onStraightenCommit?.(Number(event.currentTarget.value))}
+                onKeyUp={(event) => onStraightenCommit?.(Number(event.currentTarget.value))}
                 onBlur={(event) => onStraightenCommit?.(Number(event.currentTarget.value))}
                 aria-label="Straighten angle"
               />
@@ -798,6 +802,7 @@ export function AspOptionsPanel({
                 value={sizeValue}
                 onChange={(event) => onSizeInput?.(Number(event.currentTarget.value))}
                 onPointerUp={(event) => onSizeCommit?.(Number(event.currentTarget.value))}
+                onKeyUp={(event) => onSizeCommit?.(Number(event.currentTarget.value))}
                 onBlur={(event) => onSizeCommit?.(Number(event.currentTarget.value))}
                 aria-label={strokeLabel}
               />
@@ -817,6 +822,7 @@ export function AspOptionsPanel({
                   value={cornerRadius}
                   onChange={(event) => onCornerRadiusInput?.(Number(event.currentTarget.value))}
                   onPointerUp={(event) => onCornerRadiusCommit?.(Number(event.currentTarget.value))}
+                  onKeyUp={(event) => onCornerRadiusCommit?.(Number(event.currentTarget.value))}
                   onBlur={(event) => onCornerRadiusCommit?.(Number(event.currentTarget.value))}
                   aria-label="Corner radius"
                 />

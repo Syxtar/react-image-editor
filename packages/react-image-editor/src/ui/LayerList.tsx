@@ -309,6 +309,7 @@ export function AspLayerList({
                 disabled={!hasSelection}
                 onChange={handleOpacityInput}
                 onPointerUp={(event) => commitOpacity(event.currentTarget.value)}
+                onKeyUp={(event) => commitOpacity(event.currentTarget.value)}
                 onBlur={(event) => commitOpacity(event.currentTarget.value)}
                 aria-label="Layer opacity"
               />
