@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
 import { App } from './App';
+import '@ascentsparksoftware/react-image-editor/styles.css';
 import './styles.scss';
 
 const container = document.getElementById('root');
