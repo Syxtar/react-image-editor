@@ -647,8 +647,9 @@
 }
 
 /* ---- responsive (driven by the editor's own width) ---- */
+
 /* Tablet-ish: tighten the rail and options column so the canvas keeps room. */
-.asp-image-editor @container aspeditor (max-width: 880px) {
+@container aspeditor (max-width: 880px) {
   .asp-image-editor .asp-workspace {
     grid-template-columns: 68px minmax(0, 1fr) 232px;
     gap: 10px;
@@ -658,7 +659,7 @@
 /* Narrow / mobile: stack the rail, canvas, and panel into one scrolling column.
    The host scrolls; children keep their natural height (the canvas a comfortable
    fixed height) so nothing gets squished. The rail is a sticky tool strip. */
-.asp-image-editor @container aspeditor (max-width: 600px) {
+@container aspeditor (max-width: 600px) {
   .asp-image-editor {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;

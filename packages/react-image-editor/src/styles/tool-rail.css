@@ -138,7 +138,7 @@
 
 /* Narrow editor: the rail becomes a horizontal tool grid that wraps onto two
    rows, so every tool stays visible (no horizontal scrolling to discover them). */
-.asp-tool-rail @container aspeditor (max-width: 600px) {
+@container aspeditor (max-width: 600px) {
   .asp-tool-rail {
     flex-direction: row;
     flex-wrap: wrap;

@@ -44,10 +44,13 @@ for (let i = 0; i < css.length; i++) {
   if (ch === '{') {
     const prelude = buffer;
     const trimmed = prelude.trim();
+    // The prelude may open with comments (e.g. a section banner before
+    // `@container …`) — the at-rule/selector decision must ignore them.
+    const preludeSansComments = trimmed.replace(/\/\*[\s\S]*?\*\//g, ' ').trim();
     const inKeyframes = keyframesDepth !== -1 && depth > keyframesDepth;
-    if (trimmed.startsWith('@')) {
-      // At-rule prelude (@media, @supports, @keyframes…): emit as-is.
-      if (trimmed.startsWith('@keyframes')) {
+    if (preludeSansComments.startsWith('@')) {
+      // At-rule prelude (@media, @container, @supports, @keyframes…): emit as-is.
+      if (preludeSansComments.startsWith('@keyframes')) {
         keyframesDepth = depth;
       }
       out += prelude + '{';

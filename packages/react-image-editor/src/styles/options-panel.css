@@ -49,7 +49,7 @@
 
 /* Narrow editor: the whole workspace scrolls as one column, so the options
    panel flows at its natural height instead of being an internal scroll pane. */
-.asp-options-panel @container aspeditor (max-width: 600px) {
+@container aspeditor (max-width: 600px) {
   .asp-options-panel {
     overflow: visible;
   }
