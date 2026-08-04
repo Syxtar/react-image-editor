@@ -27,6 +27,7 @@ export {
   type AspExportFormat,
   type AspAspectPreset,
   type AspAspectOption,
+  type AspExportTarget,
   type AspEditorError,
 } from './types/editor.types';
 
