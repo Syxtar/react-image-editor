@@ -8,6 +8,7 @@ function makeController(overrides: Partial<EditorControllerProps> = {}): EditorC
     initialAspect: null,
     aspectPresets: ['free', '1:1', '4:3', '16:9'],
     exportFormats: ['png', 'jpeg', 'webp'],
+    exportTarget: null,
     keyboardEnabled: true,
     fonts: [],
     backgroundRemovalLoader: null,

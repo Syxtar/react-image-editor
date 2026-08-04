@@ -17,6 +17,7 @@ import type {
   AspAspectPreset,
   AspEditorError,
   AspExportFormat,
+  AspExportTarget,
   AspFilter,
   AspMode,
   AspTool,
@@ -54,6 +55,8 @@ export interface EditorUiState {
   readonly activeLook: AspFilter | null;
   readonly activeCrop: AspAspectPreset;
   readonly activeAspectLabel: string;
+  /** Pixel target of the selected custom aspect option, when it declares one. */
+  readonly activeAspectTarget: AspExportTarget | null;
   readonly straighten: number;
   readonly annotationColor: string;
   readonly annotationWidth: number;
@@ -120,6 +123,8 @@ export interface EditorControllerProps {
   readonly initialAspect: AspAspectPreset | null;
   readonly aspectPresets: readonly AspAspectPreset[];
   readonly exportFormats: readonly AspExportFormat[];
+  /** Pixel size a cropped export renders at; a selected aspect option overrides it. */
+  readonly exportTarget: AspExportTarget | null;
   readonly keyboardEnabled: boolean;
   readonly fonts: readonly FontOption[];
   readonly backgroundRemovalLoader: AspBackgroundRemovalLoader | null;
@@ -195,6 +200,7 @@ export function initialEditorUiState(): EditorUiState {
     activeLook: null,
     activeCrop: 'free',
     activeAspectLabel: '',
+    activeAspectTarget: null,
     straighten: 0,
     annotationColor: ANNOTATION_COLORS[0],
     annotationWidth: 4,
@@ -386,6 +392,7 @@ export class EditorController {
         });
         this.engine.setSnapping(this.state.snapEnabled);
         this.engine.setArtboard(this.state.artboard);
+        this.applyExportTarget();
         this.engine.setRulersEnabled(this.state.rulersEnabled);
         this.boundCanvas = canvas;
         this.lastSource = undefined;
@@ -449,7 +456,8 @@ export class EditorController {
     const aspect = this.resolveInitialAspect();
     this.patch({ activeCrop: aspect });
     if (aspect !== 'free' && this.layout() === 'basic') {
-      this.patch({ activeAspectLabel: '' });
+      this.patch({ activeAspectLabel: '', activeAspectTarget: null });
+      this.applyExportTarget();
       this.ensureCropSession(this.ratioFromPreset(aspect));
     }
   }
@@ -524,10 +532,6 @@ export class EditorController {
       zoomPct: engine.isImageCropping() ? engine.imageCropZoomPct : engine.zoom,
       layers: engine.getLayers(),
     });
-  }
-
-  private refreshLayers(): void {
-    this.patch({ layers: this.engine?.getLayers() ?? [] });
   }
 
   // ---- keyboard + pointer scope ---------------------------------------------
@@ -851,6 +855,18 @@ export class EditorController {
     }
   }
 
+  /**
+   * Push the effective export target to the engine: the selected aspect option's
+   * own dimensions when it declares any, else the host's `exportTarget` prop.
+   */
+  syncExportTarget(): void {
+    this.applyExportTarget();
+  }
+
+  private applyExportTarget(): void {
+    this.engine?.setExportTarget(this.state.activeAspectTarget ?? this.props.exportTarget);
+  }
+
   /** Sync export defaults from inputs (exportQuality / exportFormats props). */
   syncExportDefaults(quality: number, formats: readonly AspExportFormat[]): void {
     const partial: EditorUiPatch = { exportQ: quality };
@@ -898,7 +914,9 @@ export class EditorController {
       // A crop's source aspect is not recoverable from the flattened scene.
       activeCrop: 'free',
       activeAspectLabel: '',
+      activeAspectTarget: null,
     });
+    this.applyExportTarget();
   }
 
   zoomIn(): void {
@@ -1115,14 +1133,21 @@ export class EditorController {
 
   /** Choose a crop aspect preset — reshapes (or starts) the live crop frame. */
   selectCrop(preset: AspAspectPreset): void {
-    this.patch({ activeCrop: preset, activeAspectLabel: '' });
+    // A preset carries no pixel size, so exports fall back to the host default.
+    this.patch({ activeCrop: preset, activeAspectLabel: '', activeAspectTarget: null });
+    this.applyExportTarget();
     this.ensureCropSession(this.ratioFromPreset(preset));
     this.sync();
   }
 
   /** Choose a custom crop aspect (e.g. a CMS target) — reshapes (or starts) the live frame. */
   selectCustomCrop(option: AspAspectOption): void {
-    this.patch({ activeAspectLabel: option.label });
+    this.patch({
+      activeAspectLabel: option.label,
+      activeAspectTarget:
+        option.width && option.height ? { width: option.width, height: option.height } : null,
+    });
+    this.applyExportTarget();
     this.ensureCropSession(option.ratio);
     this.sync();
   }

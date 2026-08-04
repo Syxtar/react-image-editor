@@ -19,6 +19,7 @@ import type {
   AspAspectPreset,
   AspEditorError,
   AspExportFormat,
+  AspExportTarget,
   AspFilter,
   AspMode,
   AspSize,
@@ -90,6 +91,14 @@ export interface ImageEditorProps {
   readonly aspectRatios?: readonly AspAspectOption[];
   readonly exportFormats?: readonly AspExportFormat[];
   readonly exportQuality?: number;
+  /**
+   * Pixel size a cropped export should be rendered at, e.g. `{width: 1000,
+   * height: 1000}` for a profile photo. Without it a crop exports at the source
+   * image's own resolution; with it the export is that size, capped at the
+   * source's real pixels (the editor never upscales). An {@link aspectRatios}
+   * option carrying `width`/`height` overrides this while it is selected.
+   */
+  readonly exportTarget?: AspExportTarget | null;
   readonly baseColor?: string;
   readonly accentColor?: string;
   readonly themeMode?: AspThemeMode;
@@ -146,6 +155,7 @@ export function ImageEditor({
   aspectRatios = [],
   exportFormats = ['png', 'jpeg', 'webp'],
   exportQuality = 90,
+  exportTarget = null,
   baseColor = FALLBACK_BASE,
   accentColor = FALLBACK_ACCENT,
   themeMode = 'light',
@@ -173,6 +183,7 @@ export function ImageEditor({
     initialAspect,
     exportFormats,
     exportQuality,
+    exportTarget,
     keyboardEnabled,
     fonts,
     backgroundRemovalLoader,
@@ -611,11 +622,27 @@ export function ImageEditor({
                     key={preset}
                     type="button"
                     className={
-                      state.activeCrop === preset ? 'asp-chip asp-chip--active' : 'asp-chip'
+                      state.activeCrop === preset && !state.activeAspectLabel
+                        ? 'asp-chip asp-chip--active'
+                        : 'asp-chip'
                     }
                     onClick={() => controller.selectCrop(preset)}
                   >
                     {preset === 'free' ? 'Free' : preset === 'original' ? 'Original' : preset}
+                  </button>
+                ))}
+                {aspectRatios.map((option) => (
+                  <button
+                    key={option.label}
+                    type="button"
+                    className={
+                      state.activeAspectLabel === option.label
+                        ? 'asp-chip asp-chip--active'
+                        : 'asp-chip'
+                    }
+                    onClick={() => controller.selectCustomCrop(option)}
+                  >
+                    {option.label}
                   </button>
                 ))}
               </div>
