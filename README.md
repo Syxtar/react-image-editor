@@ -310,6 +310,31 @@ and supply a single non-`free` preset (e.g. `aspectPresets: ['1:1']`), that rati
 otherwise the crop opens unconstrained (`free`). In `basic` mode the crop frame is live immediately;
 in `advanced`/`full` it becomes the crop tool's starting aspect.
 
+
+### Export resolution
+
+A cropped export carries the **source image's real pixels**, not the size the crop
+happened to be on screen. Pick the size you want in one of three ways:
+
+```tsx
+// 1. An exact target for every crop in this editor.
+<ImageEditor exportTarget={{ width: 1000, height: 1000 }} />
+
+// 2. Per aspect option — the selected chip's own dimensions win.
+<ImageEditor aspectRatios={[aspectOption(1200, 630, 'Social'), aspectOption(1000, 1000, 'Avatar')]} />
+
+// 3. Nothing at all — the crop exports at full source fidelity.
+```
+
+The export is always capped at the source's real resolution (a 300px photo never
+becomes a 1000px blur) and at a 4096×4096 bitmap so low-end devices can allocate it.
+
+> **Upgrading from 1.0.x:** cropped exports used to come out at the on-screen size
+> of the crop frame — a 2400×2400 photo cropped in a 640px dialog produced a ~230px
+> image. They are now full resolution, so saved blobs get larger. Set `exportTarget`
+> if you want a specific (smaller) size.
+
+
 ## API
 
 | Prop | Type | Default | What it does |
@@ -325,6 +350,7 @@ in `advanced`/`full` it becomes the crop tool's starting aspect.
 | `aspectRatios` | `AspAspectOption[]` | `[]` | Custom CMS targets, e.g. `aspectOption(1200, 630)` |
 | `exportFormats` | `AspExportFormat[]` | `['png','jpeg','webp']` | Offered formats (+ `'svg'`, `'pdf'`, `'json'`) |
 | `exportQuality` | `number` | `90` | 10–100 |
+| `exportTarget` | `AspExportTarget \| null` | `null` | Exact px size for a cropped export |
 | `baseColor` | `string` | `'#f4f6f9'` | Theme neutral anchor |
 | `accentColor` | `string` | `'#1f6feb'` | Theme accent |
 | `themeMode` | `'light' \| 'dark'` | `'light'` | Theme mode |

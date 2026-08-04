@@ -73,6 +73,7 @@ const PROPS: readonly PropRow[] = [
   { prop: 'aspectRatios', type: 'AspAspectOption[]', def: '[]' },
   { prop: 'exportFormats', type: 'AspExportFormat[]', def: "['png','jpeg','webp']" },
   { prop: 'exportQuality', type: 'number', def: '90' },
+  { prop: 'exportTarget', type: 'AspExportTarget | null', def: 'null' },
   { prop: 'heading', type: 'string', def: "'Edit image'" },
   { prop: 'showHistory', type: 'boolean', def: 'true' },
   { prop: 'keyboardEnabled', type: 'boolean', def: 'true' },
