@@ -133,6 +133,17 @@ export interface AspOptionsPanelProps {
   readonly textAlign?: string;
   readonly lineHeight?: number;
   readonly letterSpacing?: number;
+  readonly textOutlineColor?: string;
+  readonly textOutlineWidth?: number;
+  readonly textShadowColor?: string;
+  readonly textShadowBlur?: number;
+  readonly textShadowOffsetX?: number;
+  readonly textShadowOffsetY?: number;
+  readonly textSkewX?: number;
+  readonly textSkewY?: number;
+  readonly textFlipX?: boolean;
+  readonly textFlipY?: boolean;
+  readonly textBlendMode?: string;
   /** Current rectangle corner radius (px) — drives the sharp → pill slider. */
   readonly cornerRadius?: number;
   /** Pill-cap radius: the slider's maximum for the current rectangle. */
@@ -181,6 +192,10 @@ export interface AspOptionsPanelProps {
   readonly onLineHeightChange?: (value: number) => void;
   readonly onLetterSpacingChange?: (value: number) => void;
   readonly onTextBgChange?: (color: string) => void;
+  readonly onTextOutlineChange?: (change: { color?: string; width?: number }) => void;
+  readonly onTextShadowChange?: (change: { color?: string; blur?: number; offsetX?: number; offsetY?: number }) => void;
+  readonly onTextTransformChange?: (change: { skewX?: number; skewY?: number; flipX?: boolean; flipY?: boolean }) => void;
+  readonly onTextBlendModeChange?: (value: string) => void;
   readonly onRedactModeChange?: (mode: RedactMode) => void;
   readonly onApplyRedaction?: () => void;
   readonly onMagicToleranceChange?: (value: number) => void;
@@ -238,6 +253,17 @@ export function AspOptionsPanel({
   textAlign = 'left',
   lineHeight = 1.16,
   letterSpacing = 0,
+  textOutlineColor = 'transparent',
+  textOutlineWidth = 0,
+  textShadowColor = 'transparent',
+  textShadowBlur = 0,
+  textShadowOffsetX = 0,
+  textShadowOffsetY = 0,
+  textSkewX = 0,
+  textSkewY = 0,
+  textFlipX = false,
+  textFlipY = false,
+  textBlendMode = 'source-over',
   cornerRadius = 0,
   cornerRadiusMax = 55,
   showCornerRadius = false,
@@ -275,6 +301,10 @@ export function AspOptionsPanel({
   onLineHeightChange,
   onLetterSpacingChange,
   onTextBgChange,
+  onTextOutlineChange,
+  onTextShadowChange,
+  onTextTransformChange,
+  onTextBlendModeChange,
   onRedactModeChange,
   onApplyRedaction,
   onMagicToleranceChange,
@@ -762,6 +792,65 @@ export function AspOptionsPanel({
                     />
                   </div>
                 </div>
+                <div>
+                  <span className="asp-field-label">Outline</span>
+                  <div className="asp-mt">
+                    <AspColorField
+                      colors={FILL_COLORS}
+                      value={textOutlineColor}
+                      onColorChange={(color) => onTextOutlineChange?.({ color })}
+                    />
+                  </div>
+                  <input type="range" className="asp-range" min={0} max={20}
+                    value={textOutlineWidth}
+                    onChange={(event) => onTextOutlineChange?.({ width: Number(event.currentTarget.value) })}
+                    aria-label="Outline width" />
+                </div>
+                <div>
+                  <span className="asp-field-label">Shadow</span>
+                  <div className="asp-mt">
+                    <AspColorField
+                      colors={FILL_COLORS}
+                      value={textShadowColor}
+                      onColorChange={(color) => onTextShadowChange?.({ color })}
+                    />
+                  </div>
+                  <div className="asp-field-row"><span className="asp-field-label">Blur</span><span className="asp-field-value">{textShadowBlur}</span></div>
+                  <input type="range" className="asp-range" min={0} max={50} value={textShadowBlur}
+                    onChange={(event) => onTextShadowChange?.({ blur: Number(event.currentTarget.value) })}
+                    aria-label="Shadow blur" />
+                  <div className="asp-field-row"><span className="asp-field-label">Offset X</span><span className="asp-field-value">{textShadowOffsetX}</span></div>
+                  <input type="range" className="asp-range" min={-50} max={50} value={textShadowOffsetX}
+                    onChange={(event) => onTextShadowChange?.({ offsetX: Number(event.currentTarget.value) })}
+                    aria-label="Shadow offset X" />
+                  <div className="asp-field-row"><span className="asp-field-label">Offset Y</span><span className="asp-field-value">{textShadowOffsetY}</span></div>
+                  <input type="range" className="asp-range" min={-50} max={50} value={textShadowOffsetY}
+                    onChange={(event) => onTextShadowChange?.({ offsetY: Number(event.currentTarget.value) })}
+                    aria-label="Shadow offset Y" />
+                </div>
+                <div>
+                  <div className="asp-field-row"><span className="asp-field-label">Skew X</span><span className="asp-field-value">{textSkewX}°</span></div>
+                  <input type="range" className="asp-range" min={-45} max={45} value={textSkewX}
+                    onChange={(event) => onTextTransformChange?.({ skewX: Number(event.currentTarget.value) })}
+                    aria-label="Skew X" />
+                  <div className="asp-field-row"><span className="asp-field-label">Skew Y</span><span className="asp-field-value">{textSkewY}°</span></div>
+                  <input type="range" className="asp-range" min={-45} max={45} value={textSkewY}
+                    onChange={(event) => onTextTransformChange?.({ skewY: Number(event.currentTarget.value) })}
+                    aria-label="Skew Y" />
+                  <div className="asp-btn-row">
+                    <button type="button" className={`asp-chip${textFlipX ? ' asp-chip--active' : ''}`}
+                      onClick={() => onTextTransformChange?.({ flipX: !textFlipX })}>Flip H</button>
+                    <button type="button" className={`asp-chip${textFlipY ? ' asp-chip--active' : ''}`}
+                      onClick={() => onTextTransformChange?.({ flipY: !textFlipY })}>Flip V</button>
+                  </div>
+                  <label className="asp-field-label" htmlFor="asp-text-blend">Blend mode</label>
+                  <select id="asp-text-blend" className="asp-input asp-select" value={textBlendMode}
+                    onChange={(event) => onTextBlendModeChange?.(event.currentTarget.value)}>
+                    <option value="source-over">Normal</option><option value="multiply">Multiply</option>
+                    <option value="screen">Screen</option><option value="overlay">Overlay</option>
+                    <option value="darken">Darken</option><option value="lighten">Lighten</option>
+                  </select>
+                </div>
               </>
             )}
 
@@ -769,7 +858,7 @@ export function AspOptionsPanel({
               <span className="asp-field-label">{isText ? 'Text color' : 'Color'}</span>
               <div className="asp-mt">
                 <AspColorField
-                  colors={ANNOTATION_COLORS}
+                  colors={isShape ? FILL_COLORS : ANNOTATION_COLORS}
                   value={annotationColor}
                   onColorChange={(color) => onAnnotationColorChange?.(color)}
                 />

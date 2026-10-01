@@ -110,6 +110,10 @@ export interface ImageEditorProps {
   readonly keyboardEnabled?: boolean;
   /** Available text fonts (host-overridable). */
   readonly fonts?: readonly FontOption[];
+  /** Font selected for newly-created text. */
+  readonly defaultFont?: string;
+  /** When set, replace export controls with one host-managed save action. */
+  readonly hostSaveLabel?: string;
   /**
    * Enable AI background removal / subject cut-out. Install
    * `@imgly/background-removal` in the consuming app and pass its dynamic import:
@@ -163,6 +167,8 @@ export function ImageEditor({
   showHistory = true,
   keyboardEnabled = true,
   fonts = DEFAULT_FONTS,
+  defaultFont,
+  hostSaveLabel,
   backgroundRemovalLoader = null,
   heicDecoderLoader = null,
   onSaved,
@@ -186,6 +192,7 @@ export function ImageEditor({
     exportTarget,
     keyboardEnabled,
     fonts,
+    defaultFont,
     backgroundRemovalLoader,
     heicDecoderLoader,
     onSaved,
@@ -420,7 +427,7 @@ export function ImageEditor({
               )}
               <span className="asp-spacer"></span>
               <ImageMenu binding={binding} onUploadInput={onUploadInput} />
-              <ExportMenu binding={binding} exportFormats={exportFormats} />
+              <ExportMenu binding={binding} exportFormats={exportFormats} hostSaveLabel={hostSaveLabel} />
             </div>
 
             <div
@@ -506,6 +513,17 @@ export function ImageEditor({
               textAlign={state.textAlign}
               lineHeight={state.lineHeight}
               letterSpacing={state.letterSpacing}
+              textOutlineColor={state.textOutlineColor}
+              textOutlineWidth={state.textOutlineWidth}
+              textShadowColor={state.textShadowColor}
+              textShadowBlur={state.textShadowBlur}
+              textShadowOffsetX={state.textShadowOffsetX}
+              textShadowOffsetY={state.textShadowOffsetY}
+              textSkewX={state.textSkewX}
+              textSkewY={state.textSkewY}
+              textFlipX={state.textFlipX}
+              textFlipY={state.textFlipY}
+              textBlendMode={state.textBlendMode}
               frameOptions={FRAME_OPTIONS}
               activeFrame={state.activeFrame}
               redactMode={state.redactMode}
@@ -542,6 +560,13 @@ export function ImageEditor({
               onLineHeightChange={(value) => controller.setLineHeight(value)}
               onLetterSpacingChange={(value) => controller.setLetterSpacing(value)}
               onTextBgChange={(color) => controller.setTextBg(color)}
+              onTextOutlineChange={(change) => controller.setTextOutline(
+                change.color ?? state.textOutlineColor,
+                change.width ?? state.textOutlineWidth,
+              )}
+              onTextShadowChange={(change) => controller.setTextShadow(change)}
+              onTextTransformChange={(change) => controller.setTextTransform(change)}
+              onTextBlendModeChange={(value) => controller.setTextBlendMode(value)}
               onRedactModeChange={(redactMode) => controller.setRedactMode(redactMode)}
               onApplyRedaction={() => controller.applyRedaction()}
               onAnnotationColorChange={(color) => controller.setAnnotationColor(color)}
@@ -581,7 +606,7 @@ export function ImageEditor({
           <div className="asp-topbar">
             <ZoomControl binding={binding} zoomLabel={zoomLabel} />
             <span className="asp-spacer"></span>
-            <ExportMenu binding={binding} exportFormats={exportFormats} />
+            <ExportMenu binding={binding} exportFormats={exportFormats} hostSaveLabel={hostSaveLabel} />
           </div>
           <div ref={setStageEl} className="asp-stage">
             <canvas ref={setCanvasEl}></canvas>
@@ -829,9 +854,11 @@ function ImageMenu({
 function ExportMenu({
   binding,
   exportFormats,
+  hostSaveLabel,
 }: {
   binding: EditorBinding;
   exportFormats: readonly AspExportFormat[];
+  hostSaveLabel?: string;
 }): ReactElement {
   const { controller, state } = binding;
   return (
@@ -841,7 +868,7 @@ function ExportMenu({
         className="asp-btn-accent asp-topbtn"
         onClick={() => controller.toggleExport()}
       >
-        <AspIcon name="download" size={16} /> Export
+        <AspIcon name="download" size={16} /> {hostSaveLabel ? 'Save' : 'Export'}
       </button>
       {state.exportOpen && (
         <>
@@ -853,7 +880,7 @@ function ExportMenu({
           ></button>
           <div className="asp-menu asp-menu--right asp-menu--export">
             <div className="asp-menu__label">Format</div>
-            <div className="asp-fmt-row">
+            {hostSaveLabel ? <div className="asp-fmt asp-fmt--active">{hostSaveLabel}</div> : <div className="asp-fmt-row">
               {exportFormats.map((fmt) => (
                 <button
                   key={fmt}
@@ -864,8 +891,8 @@ function ExportMenu({
                   {fmt.toUpperCase()}
                 </button>
               ))}
-            </div>
-            <div className="asp-menu__row">
+            </div>}
+            {!hostSaveLabel && <><div className="asp-menu__row">
               <span className="asp-menu__label">Quality</span>
               <span className="asp-menu__value">{state.exportQ}</span>
             </div>
@@ -877,13 +904,13 @@ function ExportMenu({
               value={state.exportQ}
               onChange={(event) => controller.setExportQuality(Number(event.currentTarget.value))}
               aria-label="Export quality"
-            />
+            /></>}
             <button
               type="button"
               className="asp-btn-accent asp-download"
-              onClick={() => void controller.download()}
+              onClick={() => void (hostSaveLabel ? controller.save() : controller.download())}
             >
-              Download image
+              {hostSaveLabel ? 'Save image' : 'Download image'}
             </button>
           </div>
         </>

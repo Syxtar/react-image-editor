@@ -85,6 +85,17 @@ export interface TextStyleInfo {
   readonly align: string;
   /** The text's current font family, so the panel can reflect it on selection. */
   readonly fontFamily: string;
+  readonly outlineColor: string;
+  readonly outlineWidth: number;
+  readonly shadowColor: string;
+  readonly shadowBlur: number;
+  readonly shadowOffsetX: number;
+  readonly shadowOffsetY: number;
+  readonly skewX: number;
+  readonly skewY: number;
+  readonly flipX: boolean;
+  readonly flipY: boolean;
+  readonly blendMode: string;
 }
 
 /** Editable style of the current selection, surfaced to the host UI. */
@@ -161,8 +172,8 @@ function isSceneTemplate(value: unknown): value is SceneTemplate {
 const ZOOM_MIN = 25;
 const ZOOM_MAX = 400;
 const FIT_PADDING = 0.92;
-/** Imported images larger than this (longest edge, px) are downscaled to cap memory. */
-const MAX_IMPORT_DIM = 4096;
+/** Preserve source dimensions; the browser reports an allocation error if unsupported. */
+const MAX_IMPORT_DIM = Number.MAX_SAFE_INTEGER;
 
 const clamp = (v: number, min: number, max: number): number => (v < min ? min : v > max ? max : v);
 
@@ -510,6 +521,7 @@ export class EditorEngine {
       const weight = object.get('fontWeight');
       const align = object.get('textAlign');
       const family = object.get('fontFamily');
+      const shadow = object.get('shadow');
       return {
         kind: 'text',
         color: typeof fill === 'string' ? fill : '#000000',
@@ -521,6 +533,19 @@ export class EditorEngine {
           strike: object.get('linethrough') === true,
           align: typeof align === 'string' ? align : 'left',
           fontFamily: typeof family === 'string' ? family : '',
+          outlineColor: typeof object.get('stroke') === 'string' ? String(object.get('stroke')) : 'transparent',
+          outlineWidth: typeof object.get('strokeWidth') === 'number' ? Number(object.get('strokeWidth')) : 0,
+          shadowColor: shadow && typeof shadow.color === 'string' ? shadow.color : 'transparent',
+          shadowBlur: shadow && typeof shadow.blur === 'number' ? shadow.blur : 0,
+          shadowOffsetX: shadow && typeof shadow.offsetX === 'number' ? shadow.offsetX : 0,
+          shadowOffsetY: shadow && typeof shadow.offsetY === 'number' ? shadow.offsetY : 0,
+          skewX: typeof object.get('skewX') === 'number' ? Number(object.get('skewX')) : 0,
+          skewY: typeof object.get('skewY') === 'number' ? Number(object.get('skewY')) : 0,
+          flipX: object.get('flipX') === true,
+          flipY: object.get('flipY') === true,
+          blendMode: typeof object.get('globalCompositeOperation') === 'string'
+            ? String(object.get('globalCompositeOperation'))
+            : 'source-over',
         },
       };
     }
@@ -2177,6 +2202,25 @@ export class EditorEngine {
     if (commit) {
       this.commit('Text style');
     }
+    this.notifySelection();
+    return true;
+  }
+
+  applyTextShadow(color: string, blur: number, offsetX: number, offsetY: number): boolean {
+    const active = this.canvas
+      .getActiveObjects()
+      .filter((object) => object.isType('textbox', 'i-text', 'text'));
+    if (active.length === 0) {
+      return false;
+    }
+    const shadow = color === 'transparent'
+      ? null
+      : new this.fabric.Shadow({ color, blur, offsetX, offsetY });
+    for (const object of active) {
+      object.set('shadow', shadow);
+    }
+    this.canvas.requestRenderAll();
+    this.commit('Text shadow');
     this.notifySelection();
     return true;
   }

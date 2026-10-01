@@ -9,11 +9,10 @@
  */
 
 /**
- * Largest bitmap area a cropped export may allocate (4096²). Mobile Safari and
- * low-end Android fail to allocate canvases much beyond this, and a failed
- * allocation loses the export entirely — better a slightly smaller image.
+ * Largest bitmap area accepted by the Syxtar image pipeline. Allocation errors
+ * are reported instead of silently reducing the delivered resolution.
  */
-export const MAX_EXPORT_PIXELS = 4096 * 4096;
+export const MAX_EXPORT_PIXELS = 50_000_000;
 
 export interface ExportScaleInput {
   /** Crop region width in scene units. */

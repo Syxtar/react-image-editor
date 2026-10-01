@@ -2,6 +2,13 @@
 
 All notable changes to `@ascentsparksoftware/react-image-editor`.
 
+## 1.1.0-syxtar.1 — 2026-10-01
+
+- Added text outline, shadow, skew, flip, and blend-mode controls.
+- Added host-managed save labels and a configurable default font.
+- Added transparent shape stroke selection.
+- Raised lossless export capacity to 50 megapixels and removed silent import downscaling.
+
 ## 1.1.0 — 2026-08-04
 
 ### Fixed — cropped exports were silently downsampled to screen resolution

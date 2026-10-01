@@ -102,6 +102,27 @@ describe('syncExportDefaults', () => {
   });
 });
 
+describe('Syxtar text defaults', () => {
+  it('uses the host default font for newly-created text', () => {
+    const controller = makeController({ defaultFont: 'Komika_Axis' });
+    controller.setDefaultFont('Komika_Axis');
+    expect(controller.getSnapshot().fontFamily).toBe('Komika_Axis');
+  });
+
+  it('tracks outline, shadow, transform, and blend controls', () => {
+    const controller = makeController();
+    controller.setTextOutline('#ffffff', 4);
+    controller.setTextShadow({ color: '#000000', blur: 8, offsetX: 2, offsetY: 3 });
+    controller.setTextTransform({ skewX: 10, flipY: true });
+    controller.setTextBlendMode('multiply');
+    expect(controller.getSnapshot()).toMatchObject({
+      textOutlineColor: '#ffffff', textOutlineWidth: 4,
+      textShadowColor: '#000000', textShadowBlur: 8, textShadowOffsetX: 2, textShadowOffsetY: 3,
+      textSkewX: 10, textFlipY: true, textBlendMode: 'multiply',
+    });
+  });
+});
+
 describe('selectLook (single-select toggle, engine absent)', () => {
   it('selects, toggles off on re-select, and swaps between looks', () => {
     const controller = makeController();

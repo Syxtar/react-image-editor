@@ -69,6 +69,17 @@ export interface EditorUiState {
   readonly textAlign: string;
   readonly lineHeight: number;
   readonly letterSpacing: number;
+  readonly textOutlineColor: string;
+  readonly textOutlineWidth: number;
+  readonly textShadowColor: string;
+  readonly textShadowBlur: number;
+  readonly textShadowOffsetX: number;
+  readonly textShadowOffsetY: number;
+  readonly textSkewX: number;
+  readonly textSkewY: number;
+  readonly textFlipX: boolean;
+  readonly textFlipY: boolean;
+  readonly textBlendMode: string;
   /** Custom fonts added at runtime, merged after the host-provided list. */
   readonly customFonts: readonly FontOption[];
   readonly hasSelection: boolean;
@@ -127,6 +138,7 @@ export interface EditorControllerProps {
   readonly exportTarget: AspExportTarget | null;
   readonly keyboardEnabled: boolean;
   readonly fonts: readonly FontOption[];
+  readonly defaultFont?: string;
   readonly backgroundRemovalLoader: AspBackgroundRemovalLoader | null;
   readonly heicDecoderLoader: AspHeicDecoderLoader | null;
   readonly onSaved?: (blob: Blob) => void;
@@ -213,6 +225,17 @@ export function initialEditorUiState(): EditorUiState {
     textAlign: 'left',
     lineHeight: 1.16,
     letterSpacing: 0,
+    textOutlineColor: 'transparent',
+    textOutlineWidth: 0,
+    textShadowColor: 'transparent',
+    textShadowBlur: 0,
+    textShadowOffsetX: 0,
+    textShadowOffsetY: 0,
+    textSkewX: 0,
+    textSkewY: 0,
+    textFlipX: false,
+    textFlipY: false,
+    textBlendMode: 'source-over',
     customFonts: [],
     hasSelection: false,
     selectionKind: null,
@@ -1311,6 +1334,17 @@ export class EditorController {
         partial.textUnderline = info.textStyle.underline;
         partial.textStrike = info.textStyle.strike;
         partial.textAlign = info.textStyle.align;
+        partial.textOutlineColor = info.textStyle.outlineColor;
+        partial.textOutlineWidth = info.textStyle.outlineWidth;
+        partial.textShadowColor = info.textStyle.shadowColor;
+        partial.textShadowBlur = info.textStyle.shadowBlur;
+        partial.textShadowOffsetX = info.textStyle.shadowOffsetX;
+        partial.textShadowOffsetY = info.textStyle.shadowOffsetY;
+        partial.textSkewX = info.textStyle.skewX;
+        partial.textSkewY = info.textStyle.skewY;
+        partial.textFlipX = info.textStyle.flipX;
+        partial.textFlipY = info.textStyle.flipY;
+        partial.textBlendMode = info.textStyle.blendMode;
         // Reflect the selected text's font in the panel dropdown.
         if (info.textStyle.fontFamily) {
           partial.fontFamily = info.textStyle.fontFamily;
@@ -1373,6 +1407,57 @@ export class EditorController {
   setTextBg(color: string): void {
     this.engine?.applyTextStyle({ textBackgroundColor: color === 'transparent' ? '' : color });
     this.sync();
+  }
+
+  setTextOutline(color: string, width = this.state.textOutlineWidth): void {
+    this.patch({ textOutlineColor: color, textOutlineWidth: width });
+    this.engine?.applyTextStyle({ stroke: color === 'transparent' ? '' : color, strokeWidth: width });
+    this.sync();
+  }
+
+  setTextShadow(change: Partial<{ color: string; blur: number; offsetX: number; offsetY: number }>): void {
+    const next = {
+      color: change.color ?? this.state.textShadowColor,
+      blur: change.blur ?? this.state.textShadowBlur,
+      offsetX: change.offsetX ?? this.state.textShadowOffsetX,
+      offsetY: change.offsetY ?? this.state.textShadowOffsetY,
+    };
+    this.patch({
+      textShadowColor: next.color,
+      textShadowBlur: next.blur,
+      textShadowOffsetX: next.offsetX,
+      textShadowOffsetY: next.offsetY,
+    });
+    this.engine?.applyTextShadow(next.color, next.blur, next.offsetX, next.offsetY);
+    this.sync();
+  }
+
+  setTextTransform(change: Partial<{ skewX: number; skewY: number; flipX: boolean; flipY: boolean }>): void {
+    const props: Record<string, string | number | boolean> = {};
+    if (change.skewX !== undefined) props.skewX = change.skewX;
+    if (change.skewY !== undefined) props.skewY = change.skewY;
+    if (change.flipX !== undefined) props.flipX = change.flipX;
+    if (change.flipY !== undefined) props.flipY = change.flipY;
+    this.patch({
+      ...(change.skewX !== undefined ? { textSkewX: change.skewX } : {}),
+      ...(change.skewY !== undefined ? { textSkewY: change.skewY } : {}),
+      ...(change.flipX !== undefined ? { textFlipX: change.flipX } : {}),
+      ...(change.flipY !== undefined ? { textFlipY: change.flipY } : {}),
+    });
+    this.engine?.applyTextStyle(props);
+    this.sync();
+  }
+
+  setTextBlendMode(value: string): void {
+    this.patch({ textBlendMode: value });
+    this.engine?.applyTextStyle({ globalCompositeOperation: value });
+    this.sync();
+  }
+
+  setDefaultFont(value?: string): void {
+    if (value && !this.state.hasSelection) {
+      this.patch({ fontFamily: value });
+    }
   }
 
   // ---- redact / magic / AI ----
