@@ -2,6 +2,11 @@
 
 All notable changes to `@ascentsparksoftware/react-image-editor`.
 
+## 1.1.0-syxtar.2 — 2026-10-01
+
+- Added `exportBounds="image"` to preserve the base image pixel dimensions and
+  exclude transparent canvas padding from uncropped exports.
+
 ## 1.1.0-syxtar.1 — 2026-10-01
 
 - Added text outline, shadow, skew, flip, and blend-mode controls.

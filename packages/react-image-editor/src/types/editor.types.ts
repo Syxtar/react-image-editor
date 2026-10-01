@@ -80,6 +80,9 @@ export type AspFilter = (typeof ALL_FILTERS)[number];
 /** Export formats. `json` serializes the re-editable Fabric scene; `pdf` embeds a raster. */
 export type AspExportFormat = 'png' | 'jpeg' | 'webp' | 'svg' | 'json' | 'pdf';
 
+/** Area rasterized during export. `image` clips to the base image bounds. */
+export type AspExportBounds = 'canvas' | 'image';
+
 /** A structured error surfaced via the `errorOccurred` output. */
 export interface AspEditorError {
   /** Stable machine code, e.g. `'load-failed'`, `'export-failed'`, `'engine-init-failed'`. */

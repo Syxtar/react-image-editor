@@ -97,4 +97,11 @@ describe('exportPixelSize', () => {
   it('never reports a zero dimension for a tiny region', () => {
     expect(exportPixelSize({ width: 0.4, height: 0.4 }, 1)).toEqual({ width: 1, height: 1 });
   });
+
+  it.each([
+    [{ width: 180, height: 320 }, 5, { width: 900, height: 1600 }],
+    [{ width: 320, height: 180 }, 5, { width: 1600, height: 900 }],
+  ])('restores source dimensions from fitted image bounds', (region, scale, expected) => {
+    expect(exportPixelSize(region, scale)).toEqual(expected);
+  });
 });

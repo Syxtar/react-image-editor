@@ -18,6 +18,7 @@ import type {
   AspAspectOption,
   AspAspectPreset,
   AspEditorError,
+  AspExportBounds,
   AspExportFormat,
   AspExportTarget,
   AspFilter,
@@ -91,6 +92,8 @@ export interface ImageEditorProps {
   readonly aspectRatios?: readonly AspAspectOption[];
   readonly exportFormats?: readonly AspExportFormat[];
   readonly exportQuality?: number;
+  /** Export the whole canvas, or clip uncropped output to the base image. */
+  readonly exportBounds?: AspExportBounds;
   /**
    * Pixel size a cropped export should be rendered at, e.g. `{width: 1000,
    * height: 1000}` for a profile photo. Without it a crop exports at the source
@@ -159,6 +162,7 @@ export function ImageEditor({
   aspectRatios = [],
   exportFormats = ['png', 'jpeg', 'webp'],
   exportQuality = 90,
+  exportBounds = 'canvas',
   exportTarget = null,
   baseColor = FALLBACK_BASE,
   accentColor = FALLBACK_ACCENT,
@@ -189,6 +193,7 @@ export function ImageEditor({
     initialAspect,
     exportFormats,
     exportQuality,
+    exportBounds,
     exportTarget,
     keyboardEnabled,
     fonts,

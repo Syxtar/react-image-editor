@@ -29,6 +29,7 @@ import { FILTER_REGISTRY } from '../registry/tool-registry';
 import {
   ALL_FILTERS,
   type AspAspectPreset,
+  type AspExportBounds,
   type AspExportFormat,
   type AspExportTarget,
   type AspFilter,
@@ -259,6 +260,7 @@ export class EditorEngine {
   private cropRegion: FrameRect | null = null;
   /** Host-requested pixel size for a cropped export; null = full source fidelity. */
   private exportTarget: AspExportTarget | null = null;
+  private exportBounds: AspExportBounds = 'canvas';
   /** The interactive crop frame while the Crop tool is active, else null. */
   private cropFrame: Fabric.Rect | null = null;
   /** Aspect ratio (w/h) constraining the crop frame, or null for free crop. */
@@ -1144,6 +1146,11 @@ export class EditorEngine {
     return this.exportTarget;
   }
 
+  /** Choose whether uncropped exports use the whole canvas or the base image. */
+  setExportBounds(bounds: AspExportBounds): void {
+    this.exportBounds = bounds;
+  }
+
   /** Clear any committed crop region (back to the full canvas). */
   clearCropRegion(): void {
     this.cropRegion = null;
@@ -1400,7 +1407,10 @@ export class EditorEngine {
   /** The render multiplier for the current output region. */
   private exportMultiplierFor(rect: FrameRect): number {
     if (!this.cropRegion) {
-      return this.artboard ? this.artboard.width / rect.width : 1;
+      if (this.artboard) {
+        return this.artboard.width / rect.width;
+      }
+      return this.exportBounds === 'image' ? this.sourcePerScene() : 1;
     }
     return exportMultiplier({
       regionWidth: rect.width,
@@ -1438,7 +1448,13 @@ export class EditorEngine {
     if (this.cropRegion) {
       return exportPixelSize(this.cropRegion, this.exportMultiplierFor(this.cropRegion));
     }
-    return this.artboard;
+    if (this.artboard) {
+      return this.artboard;
+    }
+    const rect = this.imageRect();
+    return this.exportBounds === 'image' && rect
+      ? exportPixelSize(rect, this.sourcePerScene())
+      : null;
   }
 
   /**
@@ -1525,12 +1541,21 @@ export class EditorEngine {
     ctx.restore();
   }
 
-  /** The current output region (committed crop, else centered artboard), scene coords. */
+  /** The current output region (crop, artboard, or base image), in scene coords. */
   private outputRect(): FrameRect | null {
     if (this.cropRegion) {
       return this.cropRegion;
     }
-    return this.artboardRect();
+    const artboard = this.artboardRect();
+    if (artboard) {
+      return artboard;
+    }
+    return this.exportBounds === 'image' ? this.imageRect() : null;
+  }
+
+  private imageRect(): FrameRect | null {
+    const rect = this.baseImage?.getBoundingRect();
+    return rect && rect.width > 0 && rect.height > 0 ? rect : null;
   }
 
   /** The live crop frame's rectangle in scene coordinates (bakes its scale). */

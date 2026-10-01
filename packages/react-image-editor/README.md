@@ -350,6 +350,7 @@ becomes a 1000px blur) and at a 4096×4096 bitmap so low-end devices can allocat
 | `aspectRatios` | `AspAspectOption[]` | `[]` | Custom CMS targets, e.g. `aspectOption(1200, 630)` |
 | `exportFormats` | `AspExportFormat[]` | `['png','jpeg','webp']` | Offered formats (+ `'svg'`, `'pdf'`, `'json'`) |
 | `exportQuality` | `number` | `90` | 10–100 |
+| `exportBounds` | `'canvas' \| 'image'` | `'canvas'` | Clip uncropped exports to the base image and restore source pixels with `'image'` |
 | `exportTarget` | `AspExportTarget \| null` | `null` | Exact px size for a cropped export |
 | `baseColor` | `string` | `'#f4f6f9'` | Theme neutral anchor |
 | `accentColor` | `string` | `'#1f6feb'` | Theme accent |

@@ -16,6 +16,7 @@ import type {
   AspAspectOption,
   AspAspectPreset,
   AspEditorError,
+  AspExportBounds,
   AspExportFormat,
   AspExportTarget,
   AspFilter,
@@ -134,6 +135,7 @@ export interface EditorControllerProps {
   readonly initialAspect: AspAspectPreset | null;
   readonly aspectPresets: readonly AspAspectPreset[];
   readonly exportFormats: readonly AspExportFormat[];
+  readonly exportBounds: AspExportBounds;
   /** Pixel size a cropped export renders at; a selected aspect option overrides it. */
   readonly exportTarget: AspExportTarget | null;
   readonly keyboardEnabled: boolean;
@@ -415,6 +417,7 @@ export class EditorController {
         });
         this.engine.setSnapping(this.state.snapEnabled);
         this.engine.setArtboard(this.state.artboard);
+        this.engine.setExportBounds(this.props.exportBounds);
         this.applyExportTarget();
         this.engine.setRulersEnabled(this.state.rulersEnabled);
         this.boundCanvas = canvas;
@@ -884,6 +887,10 @@ export class EditorController {
    */
   syncExportTarget(): void {
     this.applyExportTarget();
+  }
+
+  syncExportBounds(): void {
+    this.engine?.setExportBounds(this.props.exportBounds);
   }
 
   private applyExportTarget(): void {

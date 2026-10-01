@@ -16,6 +16,7 @@ e2e/__screenshots__/**/*-actual.png
 .env.*
 .DS_Store
 *.log
+*.tgz
 .idea/
 .vscode/*
 !.vscode/extensions.json
