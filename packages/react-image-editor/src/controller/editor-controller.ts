@@ -456,10 +456,14 @@ export class EditorController {
   private async loadSource(source: string | Blob): Promise<void> {
     try {
       await this.engine?.loadImage(source);
-      if (this.props.initialProject) await this.engine?.loadProject(this.props.initialProject);
-      this.resetUiState();
+      if (this.props.initialProject) {
+        await this.engine?.loadProject(this.props.initialProject);
+        this.syncUiFromEngine();
+      } else {
+        this.resetUiState();
+        this.applyInitialAspect();
+      }
       this.sync();
-      this.applyInitialAspect();
       this.props.onImageLoaded?.();
     } catch (error) {
       this.emitError('load-failed', error);

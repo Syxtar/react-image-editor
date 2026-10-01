@@ -3087,7 +3087,35 @@ export class EditorEngine {
       return this.exportPdf(cfg.quality);
     }
     const rasterFormat = cfg.format === 'jpeg' ? 'jpeg' : cfg.format === 'webp' ? 'webp' : 'png';
-    return dataUrlToBlob(this.artboardDataUrl(rasterFormat, cfg.quality));
+    const blob = dataUrlToBlob(this.artboardDataUrl(rasterFormat, cfg.quality));
+    const size = this.outputSize();
+    return size ? this.ensureRasterSize(blob, size, rasterFormat, cfg.quality) : blob;
+  }
+
+  private async ensureRasterSize(
+    blob: Blob,
+    size: { width: number; height: number },
+    format: 'png' | 'jpeg' | 'webp',
+    quality: number,
+  ): Promise<Blob> {
+    const bitmap = await createImageBitmap(blob);
+    try {
+      if (bitmap.width === size.width && bitmap.height === size.height) return blob;
+      const canvas = document.createElement('canvas');
+      canvas.width = size.width;
+      canvas.height = size.height;
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('No 2D canvas context is available for exact-size export.');
+      context.drawImage(bitmap, 0, 0, size.width, size.height);
+      const type = `image/${format}`;
+      return await new Promise<Blob>((resolve, reject) => canvas.toBlob(
+        (result) => result ? resolve(result) : reject(new Error('Exact-size export failed.')),
+        type,
+        quality,
+      ));
+    } finally {
+      bitmap.close();
+    }
   }
 
   /**
