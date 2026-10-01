@@ -26,6 +26,7 @@ export {
   type AspFilter,
   type AspExportFormat,
   type AspExportBounds,
+  type AspEditorProject,
   type AspAspectPreset,
   type AspAspectOption,
   type AspExportTarget,

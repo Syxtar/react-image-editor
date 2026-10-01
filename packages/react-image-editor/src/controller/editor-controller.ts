@@ -16,6 +16,7 @@ import type {
   AspAspectOption,
   AspAspectPreset,
   AspEditorError,
+  AspEditorProject,
   AspExportBounds,
   AspExportFormat,
   AspExportTarget,
@@ -120,6 +121,7 @@ export interface EditorUiState {
   readonly exportFormat: AspExportFormat;
   readonly exportQ: number;
   readonly samples: readonly SampleImage[];
+  readonly dirty: boolean;
 }
 
 /** A writable partial of {@link EditorUiState}, used to build patches. */
@@ -136,6 +138,8 @@ export interface EditorControllerProps {
   readonly aspectPresets: readonly AspAspectPreset[];
   readonly exportFormats: readonly AspExportFormat[];
   readonly exportBounds: AspExportBounds;
+  readonly initialProject: AspEditorProject | null;
+  readonly wheelZoom: boolean;
   /** Pixel size a cropped export renders at; a selected aspect option overrides it. */
   readonly exportTarget: AspExportTarget | null;
   readonly keyboardEnabled: boolean;
@@ -143,7 +147,9 @@ export interface EditorControllerProps {
   readonly defaultFont?: string;
   readonly backgroundRemovalLoader: AspBackgroundRemovalLoader | null;
   readonly heicDecoderLoader: AspHeicDecoderLoader | null;
-  readonly onSaved?: (blob: Blob) => void;
+  readonly onSaved?: (blob: Blob, project: AspEditorProject) => void | Promise<void>;
+  readonly onDraftSaved?: (project: AspEditorProject) => void | Promise<void>;
+  readonly onChanged?: (dirty: boolean) => void;
   readonly onCanceled?: () => void;
   readonly onImageLoaded?: () => void;
   readonly onExported?: (blob: Blob) => void;
@@ -266,6 +272,7 @@ export function initialEditorUiState(): EditorUiState {
     exportFormat: 'png',
     exportQ: 90,
     samples: [],
+    dirty: false,
   };
 }
 
@@ -418,6 +425,11 @@ export class EditorController {
         this.engine.setSnapping(this.state.snapEnabled);
         this.engine.setArtboard(this.state.artboard);
         this.engine.setExportBounds(this.props.exportBounds);
+        this.engine.setWheelZoom(this.props.wheelZoom);
+        this.engine.setChangeListener((dirty) => {
+          this.patch({ dirty });
+          this.props.onChanged?.(dirty);
+        });
         this.applyExportTarget();
         this.engine.setRulersEnabled(this.state.rulersEnabled);
         this.boundCanvas = canvas;
@@ -444,6 +456,7 @@ export class EditorController {
   private async loadSource(source: string | Blob): Promise<void> {
     try {
       await this.engine?.loadImage(source);
+      if (this.props.initialProject) await this.engine?.loadProject(this.props.initialProject);
       this.resetUiState();
       this.sync();
       this.applyInitialAspect();
@@ -893,6 +906,10 @@ export class EditorController {
     this.engine?.setExportBounds(this.props.exportBounds);
   }
 
+  syncWheelZoom(): void {
+    this.engine?.setWheelZoom(this.props.wheelZoom);
+  }
+
   private applyExportTarget(): void {
     this.engine?.setExportTarget(this.state.activeAspectTarget ?? this.props.exportTarget);
   }
@@ -1043,7 +1060,7 @@ export class EditorController {
         this.props.exportFormats,
       );
       this.props.onExported?.(blob);
-      this.props.onSaved?.(blob);
+      await this.props.onSaved?.(blob, engine.exportProject());
       triggerDownload(blob, `image.${extensionFor(this.state.exportFormat)}`);
     } catch (error) {
       this.emitError('export-failed', error);
@@ -1069,9 +1086,23 @@ export class EditorController {
         this.patch({ cropActive: false, hasCropRegion: true });
       }
       const blob = await engine.exportImage(format, this.state.exportQ, this.props.exportFormats);
-      this.props.onSaved?.(blob);
+      const project = engine.exportProject();
+      await this.props.onSaved?.(blob, project);
+      engine.markSaved();
     } catch (error) {
       this.emitError('export-failed', error);
+    }
+  }
+
+  async saveDraft(): Promise<void> {
+    const engine = this.engine;
+    if (!engine || !this.props.onDraftSaved) return;
+    try {
+      await this.props.onDraftSaved(engine.exportProject());
+      engine.markSaved();
+      this.patch({ exportOpen: false });
+    } catch (error) {
+      this.emitError('draft-save-failed', error);
     }
   }
 

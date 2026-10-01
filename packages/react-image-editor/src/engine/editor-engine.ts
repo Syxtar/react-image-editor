@@ -29,6 +29,7 @@ import { FILTER_REGISTRY } from '../registry/tool-registry';
 import {
   ALL_FILTERS,
   type AspAspectPreset,
+  type AspEditorProject,
   type AspExportBounds,
   type AspExportFormat,
   type AspExportTarget,
@@ -261,6 +262,9 @@ export class EditorEngine {
   /** Host-requested pixel size for a cropped export; null = full source fidelity. */
   private exportTarget: AspExportTarget | null = null;
   private exportBounds: AspExportBounds = 'canvas';
+  private wheelZoom = false;
+  private dirty = false;
+  private changeListener: ((dirty: boolean) => void) | null = null;
   /** The interactive crop frame while the Crop tool is active, else null. */
   private cropFrame: Fabric.Rect | null = null;
   /** Aspect ratio (w/h) constraining the crop frame, or null for free crop. */
@@ -319,6 +323,15 @@ export class EditorEngine {
     this.canvas.on('selection:created', notify);
     this.canvas.on('selection:updated', notify);
     this.canvas.on('selection:cleared', notify);
+    this.canvas.on('mouse:wheel', (opt) => {
+      if (!this.wheelZoom) return;
+      opt.e.preventDefault();
+      opt.e.stopPropagation();
+      const next = clamp(Math.round(this.zoomPct * Math.pow(0.999, opt.e.deltaY)), ZOOM_MIN, ZOOM_MAX);
+      this.zoomPct = next;
+      this.canvas.zoomToPoint(opt.viewportPoint, next / 100);
+      this.canvas.requestRenderAll();
+    });
     // Capture whether an empty-canvas text-mode click lands on an already-active
     // text BEFORE Fabric clears the selection in its own mouse:down handling.
     this.canvas.on('mouse:down:before', (opt) => {
@@ -1151,6 +1164,19 @@ export class EditorEngine {
     this.exportBounds = bounds;
   }
 
+  setWheelZoom(enabled: boolean): void {
+    this.wheelZoom = enabled;
+  }
+
+  setChangeListener(listener: ((dirty: boolean) => void) | null): void {
+    this.changeListener = listener;
+  }
+
+  markSaved(): void {
+    this.dirty = false;
+    this.changeListener?.(false);
+  }
+
   /** Clear any committed crop region (back to the full canvas). */
   clearCropRegion(): void {
     this.cropRegion = null;
@@ -1554,8 +1580,12 @@ export class EditorEngine {
   }
 
   private imageRect(): FrameRect | null {
-    const rect = this.baseImage?.getBoundingRect();
-    return rect && rect.width > 0 && rect.height > 0 ? rect : null;
+    const image = this.baseImage;
+    if (!image?.width || !image.height) return null;
+    const center = image.getCenterPoint();
+    const width = image.width * Math.abs(image.scaleX || 1);
+    const height = image.height * Math.abs(image.scaleY || 1);
+    return { left: center.x - width / 2, top: center.y - height / 2, width, height };
   }
 
   /** The live crop frame's rectangle in scene coordinates (bakes its scale). */
@@ -1640,6 +1670,7 @@ export class EditorEngine {
     this.canvas.setZoom(1);
     this.canvas.requestRenderAll();
     this.history.reset('Opened image', this.snapshot());
+    this.markSaved();
   }
 
   get hasImage(): boolean {
@@ -2738,6 +2769,36 @@ export class EditorEngine {
     return JSON.stringify(template);
   }
 
+  exportProject(): AspEditorProject {
+    const template = JSON.parse(this.exportScene()) as SceneTemplate;
+    const objects = ((template.snapshot.json as { objects?: Record<string, unknown>[] }).objects ?? []);
+    const base = objects.find((object) => object['aspId'] === 'base');
+    if (base) delete base['src'];
+    const size = this.outputSize() ?? {
+      width: this.baseImage?.width ?? this.canvas.getWidth(),
+      height: this.baseImage?.height ?? this.canvas.getHeight(),
+    };
+    return {
+      version: 2,
+      width: size.width,
+      height: size.height,
+      outputKind: this.cropRegion ? 'crop' : this.artboard ? 'artboard' : 'image',
+      snapshot: template.snapshot as unknown as Record<string, unknown>,
+      artboard: template.artboard,
+    };
+  }
+
+  async loadProject(project: AspEditorProject): Promise<void> {
+    const template = structuredClone(project) as unknown as SceneTemplate;
+    const objects = ((template.snapshot.json as { objects?: Record<string, unknown>[] }).objects ?? []);
+    const base = objects.find((object) => object['aspId'] === 'base');
+    const src = this.baseImage?.getSrc();
+    if (!base || !src) throw new Error('Editor project has no base image');
+    base['src'] = src;
+    await this.loadScene(JSON.stringify(template));
+    this.markSaved();
+  }
+
   /**
    * Restore a template produced by {@link exportScene}. Resets the history to
    * the loaded state so it becomes the new undo baseline. Throws on malformed
@@ -2775,6 +2836,10 @@ export class EditorEngine {
 
   private commit(label: string): void {
     this.history.push(label, this.snapshot());
+    if (!this.dirty) {
+      this.dirty = true;
+      this.changeListener?.(true);
+    }
     this.notifyLayers();
   }
 

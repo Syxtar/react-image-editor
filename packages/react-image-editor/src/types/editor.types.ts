@@ -83,6 +83,16 @@ export type AspExportFormat = 'png' | 'jpeg' | 'webp' | 'svg' | 'json' | 'pdf';
 /** Area rasterized during export. `image` clips to the base image bounds. */
 export type AspExportBounds = 'canvas' | 'image';
 
+/** Portable, editable editor scene returned to host-managed persistence. */
+export interface AspEditorProject {
+  readonly version: 2;
+  readonly width: number;
+  readonly height: number;
+  readonly outputKind: 'image' | 'crop' | 'artboard';
+  readonly snapshot: Record<string, unknown>;
+  readonly artboard: { readonly width: number; readonly height: number } | null;
+}
+
 /** A structured error surfaced via the `errorOccurred` output. */
 export interface AspEditorError {
   /** Stable machine code, e.g. `'load-failed'`, `'export-failed'`, `'engine-init-failed'`. */

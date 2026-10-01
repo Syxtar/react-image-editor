@@ -18,6 +18,7 @@ import type {
   AspAspectOption,
   AspAspectPreset,
   AspEditorError,
+  AspEditorProject,
   AspExportBounds,
   AspExportFormat,
   AspExportTarget,
@@ -94,6 +95,8 @@ export interface ImageEditorProps {
   readonly exportQuality?: number;
   /** Export the whole canvas, or clip uncropped output to the base image. */
   readonly exportBounds?: AspExportBounds;
+  readonly initialProject?: AspEditorProject | null;
+  readonly wheelZoom?: boolean;
   /**
    * Pixel size a cropped export should be rendered at, e.g. `{width: 1000,
    * height: 1000}` for a profile photo. Without it a crop exports at the source
@@ -117,6 +120,7 @@ export interface ImageEditorProps {
   readonly defaultFont?: string;
   /** When set, replace export controls with one host-managed save action. */
   readonly hostSaveLabel?: string;
+  readonly hostDraftLabel?: string;
   /**
    * Enable AI background removal / subject cut-out. Install
    * `@imgly/background-removal` in the consuming app and pass its dynamic import:
@@ -131,7 +135,9 @@ export interface ImageEditorProps {
    * Without it, importing a HEIC/HEIF file throws a descriptive error.
    */
   readonly heicDecoderLoader?: AspHeicDecoderLoader | null;
-  readonly onSaved?: (blob: Blob) => void;
+  readonly onSaved?: (blob: Blob, project: AspEditorProject) => void | Promise<void>;
+  readonly onDraftSaved?: (project: AspEditorProject) => void | Promise<void>;
+  readonly onChanged?: (dirty: boolean) => void;
   readonly onCanceled?: () => void;
   /** Fired after an image successfully loads (initial, picker, or upload). */
   readonly onImageLoaded?: () => void;
@@ -163,6 +169,8 @@ export function ImageEditor({
   exportFormats = ['png', 'jpeg', 'webp'],
   exportQuality = 90,
   exportBounds = 'canvas',
+  initialProject = null,
+  wheelZoom = false,
   exportTarget = null,
   baseColor = FALLBACK_BASE,
   accentColor = FALLBACK_ACCENT,
@@ -173,9 +181,12 @@ export function ImageEditor({
   fonts = DEFAULT_FONTS,
   defaultFont,
   hostSaveLabel,
+  hostDraftLabel,
   backgroundRemovalLoader = null,
   heicDecoderLoader = null,
   onSaved,
+  onDraftSaved,
+  onChanged,
   onCanceled,
   onImageLoaded,
   onExported,
@@ -194,6 +205,8 @@ export function ImageEditor({
     exportFormats,
     exportQuality,
     exportBounds,
+    initialProject,
+    wheelZoom,
     exportTarget,
     keyboardEnabled,
     fonts,
@@ -201,6 +214,8 @@ export function ImageEditor({
     backgroundRemovalLoader,
     heicDecoderLoader,
     onSaved,
+    onDraftSaved,
+    onChanged,
     onCanceled,
     onImageLoaded,
     onExported,
@@ -432,7 +447,7 @@ export function ImageEditor({
               )}
               <span className="asp-spacer"></span>
               <ImageMenu binding={binding} onUploadInput={onUploadInput} />
-              <ExportMenu binding={binding} exportFormats={exportFormats} hostSaveLabel={hostSaveLabel} />
+              <ExportMenu binding={binding} exportFormats={exportFormats} hostSaveLabel={hostSaveLabel} hostDraftLabel={hostDraftLabel} />
             </div>
 
             <div
@@ -611,7 +626,7 @@ export function ImageEditor({
           <div className="asp-topbar">
             <ZoomControl binding={binding} zoomLabel={zoomLabel} />
             <span className="asp-spacer"></span>
-            <ExportMenu binding={binding} exportFormats={exportFormats} hostSaveLabel={hostSaveLabel} />
+            <ExportMenu binding={binding} exportFormats={exportFormats} hostSaveLabel={hostSaveLabel} hostDraftLabel={hostDraftLabel} />
           </div>
           <div ref={setStageEl} className="asp-stage">
             <canvas ref={setCanvasEl}></canvas>
@@ -860,10 +875,12 @@ function ExportMenu({
   binding,
   exportFormats,
   hostSaveLabel,
+  hostDraftLabel,
 }: {
   binding: EditorBinding;
   exportFormats: readonly AspExportFormat[];
   hostSaveLabel?: string;
+  hostDraftLabel?: string;
 }): ReactElement {
   const { controller, state } = binding;
   return (
@@ -910,12 +927,19 @@ function ExportMenu({
               onChange={(event) => controller.setExportQuality(Number(event.currentTarget.value))}
               aria-label="Export quality"
             /></>}
+            {hostDraftLabel && <button
+              type="button"
+              className="asp-btn asp-download"
+              onClick={() => void controller.saveDraft()}
+            >
+              {hostDraftLabel}
+            </button>}
             <button
               type="button"
               className="asp-btn-accent asp-download"
               onClick={() => void (hostSaveLabel ? controller.save() : controller.download())}
             >
-              {hostSaveLabel ? 'Save image' : 'Download image'}
+              {hostSaveLabel ? hostSaveLabel : 'Download image'}
             </button>
           </div>
         </>

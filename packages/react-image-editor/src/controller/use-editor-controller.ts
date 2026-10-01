@@ -55,6 +55,7 @@ export function useEditorController(options: UseEditorControllerOptions): Editor
     exportQuality,
     exportFormats,
     exportBounds,
+    wheelZoom,
     exportTarget,
     fonts,
     defaultFont,
@@ -157,6 +158,10 @@ export function useEditorController(options: UseEditorControllerOptions): Editor
     controller.syncExportBounds();
   }, [controller, state.engineReady, exportBounds]);
 
+  useEffect(() => {
+    controller.syncWheelZoom();
+  }, [controller, state.engineReady, wheelZoom]);
+
   // ---- free-draw / text / magic follow the active tool + brush settings -----------
   useEffect(() => {
     controller.applyToolModes();
@@ -210,6 +215,8 @@ function toControllerProps(options: UseEditorControllerOptions): EditorControlle
     aspectPresets: options.aspectPresets,
     exportFormats: options.exportFormats,
     exportBounds: options.exportBounds,
+    initialProject: options.initialProject,
+    wheelZoom: options.wheelZoom,
     exportTarget: options.exportTarget,
     keyboardEnabled: options.keyboardEnabled,
     fonts: options.fonts,
@@ -217,6 +224,8 @@ function toControllerProps(options: UseEditorControllerOptions): EditorControlle
     backgroundRemovalLoader: options.backgroundRemovalLoader,
     heicDecoderLoader: options.heicDecoderLoader,
     onSaved: options.onSaved,
+    onDraftSaved: options.onDraftSaved,
+    onChanged: options.onChanged,
     onCanceled: options.onCanceled,
     onImageLoaded: options.onImageLoaded,
     onExported: options.onExported,

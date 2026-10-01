@@ -2,6 +2,11 @@
 
 All notable changes to `@ascentsparksoftware/react-image-editor`.
 
+## 1.1.0-syxtar.3 — 2026-10-01
+
+- Added editable host projects, separate draft/panel save callbacks, dirty state,
+  pointer-centred wheel zoom, and exact intrinsic-size image-bound exports.
+
 ## 1.1.0-syxtar.2 — 2026-10-01
 
 - Added `exportBounds="image"` to preserve the base image pixel dimensions and

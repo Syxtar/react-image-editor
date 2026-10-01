@@ -351,6 +351,8 @@ becomes a 1000px blur) and at a 4096×4096 bitmap so low-end devices can allocat
 | `exportFormats` | `AspExportFormat[]` | `['png','jpeg','webp']` | Offered formats (+ `'svg'`, `'pdf'`, `'json'`) |
 | `exportQuality` | `number` | `90` | 10–100 |
 | `exportBounds` | `'canvas' \| 'image'` | `'canvas'` | Clip uncropped exports to the base image and restore source pixels with `'image'` |
+| `initialProject` | `AspEditorProject \| null` | `null` | Restore an editable host-managed project after loading `src` |
+| `wheelZoom` | `boolean` | `false` | Zoom around the pointer with a mouse wheel or trackpad |
 | `exportTarget` | `AspExportTarget \| null` | `null` | Exact px size for a cropped export |
 | `baseColor` | `string` | `'#f4f6f9'` | Theme neutral anchor |
 | `accentColor` | `string` | `'#1f6feb'` | Theme accent |
